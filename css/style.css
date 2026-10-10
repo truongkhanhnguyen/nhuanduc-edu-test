@@ -483,19 +483,63 @@ body {
 /* Exam Sticky Header Bar */
 .exam-bar {
   background: var(--bg-card);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 0.85rem 1.25rem;
+  padding: 0.65rem 1.15rem;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.45rem;
   box-shadow: var(--shadow-sm);
   position: sticky;
   top: 72px;
   z-index: 50;
+  transition: all var(--transition-fast);
+}
+
+.exam-bar-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.exam-bar-left,
+.exam-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.exam-bar-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.exam-student-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  font-size: 0.88rem;
+}
+
+.student-name-text {
+  font-size: 0.95rem;
+  font-weight: 700;
 }
 
 .timer-box {
@@ -1631,14 +1675,33 @@ input:checked + .slider:before {
     padding-bottom: 2rem;
   }
 
+  /* 1. Main Site Header (Hidden during exam mode, compact otherwise) */
+  body.in-exam-mode .header {
+    display: none !important;
+  }
+
+  body.in-exam-mode {
+    padding-bottom: 0 !important;
+  }
+
+  body.in-exam-mode .main-content {
+    padding: 0.25rem 0.5rem 5rem !important;
+    max-width: 100% !important;
+  }
+
+  body.in-exam-mode .exam-layout {
+    margin-top: 0.35rem !important;
+    gap: 0 !important;
+  }
+
   .header {
-    padding: 0.65rem 1rem;
+    padding: 0.5rem 0.85rem;
   }
 
   .header-container {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.65rem;
+    gap: 0.5rem;
   }
 
   .brand {
@@ -1653,6 +1716,7 @@ input:checked + .slider:before {
     padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    gap: 0.4rem;
   }
 
   .nav-actions::-webkit-scrollbar {
@@ -1660,44 +1724,107 @@ input:checked + .slider:before {
   }
 
   .tab-btn {
-    padding: 0.45rem 0.85rem;
-    font-size: 0.82rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
     flex-shrink: 0;
   }
 
   .main-content {
-    padding: 1rem 0.75rem 5rem;
+    padding: 0.85rem 0.65rem 4.5rem;
   }
 
   /* Hero & Cards */
   .hero-card {
-    padding: 1.25rem;
+    padding: 1rem;
     border-radius: var(--radius-md);
   }
 
   .test-title {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
   }
 
   .test-sub {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
   }
 
   .setup-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.85rem;
   }
 
-  /* Exam bar on mobile */
+  /* 2. Super Sleek Sticky Exam Bar (Max Height <= 64px) */
   .exam-bar {
-    top: 0;
-    padding: 0.75rem;
-    gap: 0.5rem;
+    top: 0 !important;
+    margin: 0 -0.5rem 0.45rem !important;
+    border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    padding: 0.4rem 0.65rem 0.3rem !important;
+    gap: 0.25rem !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4) !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+  }
+
+  .exam-bar-main-row {
+    gap: 0.4rem !important;
+  }
+
+  .student-name-text {
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.82rem !important;
+  }
+
+  .exam-student-pill {
+    padding: 0.2rem 0.45rem !important;
+    font-size: 0.78rem !important;
+  }
+
+  .exam-code-badge {
+    padding: 0.2rem 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .timer-box {
+    padding: 0.25rem 0.6rem !important;
+    font-size: 0.95rem !important;
+    letter-spacing: 0.5px;
+    font-weight: 800 !important;
+  }
+
+  .btn-submit-exam {
+    padding: 0.35rem 0.65rem !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+  }
+
+  .btn-exit-exam {
+    padding: 0.35rem 0.55rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .exam-bar-sub-row {
+    font-size: 0.75rem !important;
+    padding-top: 0.15rem !important;
+  }
+
+  .anticheat-badge {
+    padding: 0.15rem 0.5rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
   }
 
   .exam-layout {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.5rem;
   }
 
   /* Hide static right palette on mobile, use bottom bar drawer instead */
@@ -1705,38 +1832,121 @@ input:checked + .slider:before {
     display: none;
   }
 
-  .mobile-exam-bottom-bar {
-    display: block;
-  }
-
+  /* 3. Maximized Question Canvas */
   .question-card {
-    padding: 1.25rem;
-    border-radius: var(--radius-md);
+    padding: 0.75rem 0.85rem !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-sm) !important;
   }
 
+  .question-instruction {
+    display: none !important; /* Hide redundant static instruction on mobile */
+  }
+
+  .question-meta {
+    margin-bottom: 0.55rem !important;
+    padding-bottom: 0.45rem !important;
+    border-bottom: 1px dashed var(--border-color);
+  }
+
+  .question-number {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+  }
+
+  .flag-btn {
+    padding: 0.25rem 0.55rem !important;
+    font-size: 0.76rem !important;
+  }
+
+  /* 4. Dialogue Speech Bubbles */
   .dialogue-container {
-    padding: 1rem;
-    margin-bottom: 1.25rem;
+    padding: 0.55rem 0.75rem !important;
+    margin-bottom: 0.65rem !important;
+    gap: 0.4rem !important;
+    border-radius: var(--radius-sm) !important;
   }
 
   .dialogue-bubble {
-    font-size: 0.95rem;
-    flex-direction: column;
-    gap: 0.25rem;
+    font-size: 0.92rem !important;
+    line-height: 1.45 !important;
+    padding: 0.45rem 0.65rem !important;
+    gap: 0.35rem !important;
+    border-radius: 8px !important;
   }
 
   .speaker-tag {
-    min-width: auto;
-    font-size: 0.88rem;
+    font-size: 0.78rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .speaker-avatar {
+    font-size: 0.95rem !important;
+  }
+
+  .fill-blank-highlight {
+    padding: 0.08rem 0.4rem !important;
+    font-size: 0.92rem !important;
+  }
+
+  /* 5. Touch-friendly & Compact Options (A, B, C, D) */
+  .options-list {
+    gap: 0.42rem !important;
+    margin-bottom: 0.55rem !important;
   }
 
   .option-item {
-    padding: 0.85rem 1rem;
-    min-height: 52px;
+    padding: 0.55rem 0.8rem !important;
+    min-height: 48px !important; /* WCAG 2.5.5 Touch Target compliance */
+    border-radius: 10px !important;
+    gap: 0.65rem !important;
+  }
+
+  .option-key {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
   }
 
   .option-text {
-    font-size: 0.95rem;
+    font-size: 0.92rem !important;
+    line-height: 1.35 !important;
+  }
+
+  /* 6. Hide duplicate in-card buttons on mobile */
+  .desktop-nav-actions,
+  .question-nav-actions {
+    display: none !important;
+  }
+
+  /* 7. Ergonomic Floating Bottom Bar */
+  .mobile-exam-bottom-bar {
+    display: block !important;
+    padding: 0.45rem 0.75rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+  }
+
+  .mobile-bottom-controls {
+    gap: 0.45rem !important;
+    max-width: 100% !important;
+  }
+
+  .mobile-nav-btn {
+    padding: 0.55rem 0.85rem !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    min-height: 42px !important;
+  }
+
+  .mobile-palette-btn {
+    padding: 0.55rem 0.65rem !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    min-height: 42px !important;
+    border-color: var(--primary) !important;
   }
 
   /* Table search & filter */
@@ -1751,32 +1961,48 @@ input:checked + .slider:before {
 
   /* Score circle */
   .score-circle {
-    width: 110px;
-    height: 110px;
+    width: 100px;
+    height: 100px;
   }
 
   .score-number {
-    font-size: 2rem;
+    font-size: 1.85rem;
   }
 
   .result-card {
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 0.85rem;
   }
 }
 
 @media (max-width: 480px) {
   .test-title {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
   }
 
-  .btn {
-    padding: 0.65rem 1.2rem;
-    font-size: 0.88rem;
+  .exam-bar {
+    padding: 0.35rem 0.5rem 0.25rem !important;
   }
 
-  .btn-lg {
-    padding: 0.85rem 1.5rem;
-    font-size: 0.95rem;
+  .student-name-text {
+    max-width: 75px !important;
+  }
+
+  .timer-box {
+    padding: 0.2rem 0.48rem !important;
+    font-size: 0.88rem !important;
+  }
+
+  .dialogue-bubble {
+    font-size: 0.88rem !important;
+  }
+
+  .option-item {
+    padding: 0.5rem 0.7rem !important;
+    min-height: 46px !important;
+  }
+
+  .option-text {
+    font-size: 0.88rem !important;
   }
 
   .palette-grid {

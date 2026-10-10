@@ -185,34 +185,40 @@
     <section id="view-exam" class="view-section">
       <!-- Sticky Exam Status Bar -->
       <div class="exam-bar">
-        <div style="display:flex; align-items:center; gap: 0.75rem; flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-sm" onclick="promptExitExam()" style="padding:0.4rem 0.8rem; font-size:0.82rem;" title="Thoát khỏi bài thi">
-            ⬅ Thoát
-          </button>
-          <div>
-            <strong id="examStudentName" style="color:var(--text-main); font-size:1.05rem;">Học sinh</strong>
-            <span class="badge badge-primary" id="examClassName" style="margin-left:0.4rem;">9.2C</span>
+        <div class="exam-bar-main-row">
+          <div class="exam-bar-left">
+            <button class="btn btn-secondary btn-sm btn-exit-exam" onclick="promptExitExam()" title="Thoát khỏi bài thi">
+              ⬅ <span class="hide-on-mobile">Thoát</span>
+            </button>
+            <div class="exam-student-pill">
+              <span id="examStudentName" class="student-name-text">Học sinh</span>
+              <span class="badge badge-primary" id="examClassName">9.2C</span>
+            </div>
+            <span id="examCodeBadge" class="exam-code-badge">Đề <strong id="examCodeDisplay">901</strong></span>
           </div>
-          <span id="examCodeBadge" class="exam-code-badge">Mã đề: <strong id="examCodeDisplay">901</strong></span>
-          <div style="font-size: 0.9rem; color:var(--text-muted);">
+
+          <div id="examTimer" class="timer-box">
+            ⏱️ 45:00
+          </div>
+
+          <div class="exam-bar-right">
+            <div class="font-scale-controls hide-on-mobile" title="Điều chỉnh cỡ chữ đề thi">
+              <button class="font-scale-btn" onclick="adjustExamFontSize(-1)">A-</button>
+              <button class="font-scale-btn" onclick="adjustExamFontSize(1)">A+</button>
+            </div>
+            <button class="btn btn-success btn-submit-exam" onclick="promptSubmit()">
+              📤 <span class="submit-text">Nộp bài</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="exam-bar-sub-row">
+          <div class="exam-progress-counter">
             Tiến độ: <strong id="answeredCount" style="color:var(--primary);">0/<span id="examTotalQ">40</span></strong> câu
           </div>
           <div id="antiCheatBadge" class="anticheat-badge" title="Hệ thống tự động phát hiện chuyển tab hoặc rời ứng dụng">
             🛡️ Giám sát: 0 vi phạm
           </div>
-        </div>
-
-        <div style="display:flex; align-items:center; gap: 0.75rem;">
-          <div class="font-scale-controls" title="Điều chỉnh cỡ chữ đề thi">
-            <button class="font-scale-btn" onclick="adjustExamFontSize(-1)">A-</button>
-            <button class="font-scale-btn" onclick="adjustExamFontSize(1)">A+</button>
-          </div>
-          <div id="examTimer" class="timer-box">
-            ⏱️ 45:00
-          </div>
-          <button class="btn btn-success" onclick="promptSubmit()">
-            📤 Nộp bài thi
-          </button>
         </div>
 
         <!-- Real-time Exam Progress Bar -->

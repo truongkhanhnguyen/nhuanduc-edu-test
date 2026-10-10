@@ -278,6 +278,10 @@ function switchView(viewName, updateHistory = true) {
 
   state.currentView = viewName;
 
+  if (document.body) {
+    document.body.classList.toggle('in-exam-mode', viewName === 'exam');
+  }
+
   document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
   document.querySelectorAll('.tab-btn:not(.teacher-gate-btn)').forEach(btn => btn.classList.remove('active'));
 
