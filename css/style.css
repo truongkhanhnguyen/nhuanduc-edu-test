@@ -1539,6 +1539,7 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+  pointer-events: none;
 }
 
 .toast {
@@ -1553,6 +1554,7 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  pointer-events: auto;
   animation: toastSlide 0.3s ease;
 }
 
@@ -1671,6 +1673,14 @@ input:checked + .slider:before {
 
 /* Responsive Breakpoints */
 @media (max-width: 768px) {
+  /* Ensure page allows smooth touch scroll and bottom clearance */
+  html, body {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
   body {
     padding-bottom: 2rem;
   }
@@ -1682,15 +1692,20 @@ input:checked + .slider:before {
 
   body.in-exam-mode {
     padding-bottom: 0 !important;
+    overflow-y: auto !important;
+    height: auto !important;
   }
 
   body.in-exam-mode .main-content {
-    padding: 0.25rem 0.5rem 5rem !important;
+    /* 145px ensures Option D easily scrolls completely above the fixed 80px bottom bar */
+    padding: 0.25rem 0.5rem calc(145px + env(safe-area-inset-bottom, 24px)) !important;
     max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   body.in-exam-mode .exam-layout {
-    margin-top: 0.35rem !important;
+    margin-top: 0.25rem !important;
     gap: 0 !important;
   }
 
@@ -1760,8 +1775,8 @@ input:checked + .slider:before {
     border-top: none !important;
     border-left: none !important;
     border-right: none !important;
-    padding: 0.4rem 0.65rem 0.3rem !important;
-    gap: 0.25rem !important;
+    padding: 0.35rem 0.55rem 0.25rem !important;
+    gap: 0.2rem !important;
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4) !important;
     background: var(--bg-glass) !important;
     backdrop-filter: blur(20px) !important;
@@ -1769,53 +1784,77 @@ input:checked + .slider:before {
   }
 
   .exam-bar-main-row {
-    gap: 0.4rem !important;
+    gap: 0.25rem !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+  }
+
+  .exam-bar-left {
+    gap: 0.25rem !important;
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .exam-bar-right {
+    gap: 0.25rem !important;
+    flex-shrink: 0 !important;
   }
 
   .student-name-text {
-    max-width: 90px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.82rem !important;
-  }
-
-  .exam-student-pill {
-    padding: 0.2rem 0.45rem !important;
+    max-width: 65px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
     font-size: 0.78rem !important;
   }
 
-  .exam-code-badge {
-    padding: 0.2rem 0.5rem !important;
+  .exam-student-pill {
+    padding: 0.15rem 0.35rem !important;
     font-size: 0.75rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .exam-code-badge {
+    padding: 0.15rem 0.35rem !important;
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
   }
 
   .timer-box {
-    padding: 0.25rem 0.6rem !important;
-    font-size: 0.95rem !important;
-    letter-spacing: 0.5px;
+    padding: 0.2rem 0.45rem !important;
+    font-size: 0.86rem !important;
+    letter-spacing: 0px !important;
     font-weight: 800 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
 
   .btn-submit-exam {
-    padding: 0.35rem 0.65rem !important;
-    font-size: 0.82rem !important;
+    padding: 0.3rem 0.55rem !important;
+    font-size: 0.78rem !important;
     font-weight: 700 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
 
   .btn-exit-exam {
-    padding: 0.35rem 0.55rem !important;
-    font-size: 0.8rem !important;
+    padding: 0.28rem 0.45rem !important;
+    font-size: 0.78rem !important;
+    flex-shrink: 0 !important;
   }
 
   .exam-bar-sub-row {
-    font-size: 0.75rem !important;
-    padding-top: 0.15rem !important;
+    font-size: 0.72rem !important;
+    padding-top: 0.1rem !important;
   }
 
   .anticheat-badge {
-    padding: 0.15rem 0.5rem !important;
-    font-size: 0.72rem !important;
+    padding: 0.12rem 0.45rem !important;
+    font-size: 0.7rem !important;
   }
 
   .hide-on-mobile {
@@ -1834,9 +1873,10 @@ input:checked + .slider:before {
 
   /* 3. Maximized Question Canvas */
   .question-card {
-    padding: 0.75rem 0.85rem !important;
+    padding: 0.65rem 0.75rem !important;
     border-radius: var(--radius-md) !important;
     box-shadow: var(--shadow-sm) !important;
+    margin-bottom: 1.5rem !important;
   }
 
   .question-instruction {
@@ -1844,74 +1884,134 @@ input:checked + .slider:before {
   }
 
   .question-meta {
-    margin-bottom: 0.55rem !important;
-    padding-bottom: 0.45rem !important;
+    margin-bottom: 0.45rem !important;
+    padding-bottom: 0.35rem !important;
     border-bottom: 1px dashed var(--border-color);
   }
 
   .question-number {
-    font-size: 1.05rem !important;
+    font-size: 1rem !important;
     font-weight: 700 !important;
   }
 
   .flag-btn {
-    padding: 0.25rem 0.55rem !important;
-    font-size: 0.76rem !important;
+    padding: 0.2rem 0.45rem !important;
+    font-size: 0.75rem !important;
   }
 
-  /* 4. Dialogue Speech Bubbles */
+  /* 4. Dialogue Speech Bubbles - Super Compact & Space-Efficient */
   .dialogue-container {
-    padding: 0.55rem 0.75rem !important;
-    margin-bottom: 0.65rem !important;
-    gap: 0.4rem !important;
-    border-radius: var(--radius-sm) !important;
+    padding: 0.45rem 0.65rem !important;
+    margin-bottom: 0.55rem !important;
+    gap: 0.35rem !important;
+    border-radius: 8px !important;
+    background: var(--bg-secondary) !important;
+    border-left: 3px solid var(--primary) !important;
+  }
+
+  .dialogue-container::after {
+    display: none !important; /* Hide CONVERSATION CONTEXT watermark on mobile to maximize room */
   }
 
   .dialogue-bubble {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 0.4rem !important;
     font-size: 0.92rem !important;
-    line-height: 1.45 !important;
-    padding: 0.45rem 0.65rem !important;
-    gap: 0.35rem !important;
-    border-radius: 8px !important;
+    line-height: 1.38 !important;
+    padding: 0.35rem 0.5rem !important;
+    border-radius: 6px !important;
+    background: rgba(255, 255, 255, 0.03) !important;
   }
 
-  .speaker-tag {
-    font-size: 0.78rem !important;
-    gap: 0.25rem !important;
+  .speaker-pill {
+    min-width: auto !important; /* CRITICAL: Override desktop min-width: 105px */
+    padding: 0.15rem 0.45rem !important;
+    font-size: 0.76rem !important;
+    height: auto !important;
+    line-height: 1.2 !important;
+    flex-shrink: 0 !important;
+    border-radius: 4px !important;
   }
 
-  .speaker-avatar {
-    font-size: 0.95rem !important;
-  }
-
-  .fill-blank-highlight {
-    padding: 0.08rem 0.4rem !important;
+  .speaker-text {
     font-size: 0.92rem !important;
+    line-height: 1.35 !important;
+    flex: 1 1 auto !important;
+    color: var(--text-main) !important;
+    word-break: break-word !important;
+  }
+
+  .blank-placeholder {
+    min-width: 60px !important;
+    padding: 1px 6px !important;
+    font-size: 0.88rem !important;
+  }
+
+  .filled-blank {
+    padding: 1px 6px !important;
+    font-size: 0.88rem !important;
   }
 
   /* 5. Touch-friendly & Compact Options (A, B, C, D) */
   .options-list {
-    gap: 0.42rem !important;
-    margin-bottom: 0.55rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.45rem !important;
+    margin-bottom: 2rem !important; /* Extra bottom breathing room for Option D */
   }
 
   .option-item {
-    padding: 0.55rem 0.8rem !important;
+    padding: 0.5rem 0.75rem !important;
     min-height: 48px !important; /* WCAG 2.5.5 Touch Target compliance */
     border-radius: 10px !important;
     gap: 0.65rem !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+    border: 1.5px solid var(--border-color) !important;
+    transform: none !important;
+  }
+
+  .option-item:hover {
+    transform: none !important;
+  }
+
+  .option-item:active {
+    transform: scale(0.985) !important;
+  }
+
+  .option-item.selected {
+    background: rgba(99, 102, 241, 0.18) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.35) !important;
+    transform: none !important;
   }
 
   .option-key {
-    width: 32px !important;
-    height: 32px !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
     font-size: 0.85rem !important;
     font-weight: 700 !important;
+    border-radius: 50% !important;
   }
 
   .option-text {
-    font-size: 0.92rem !important;
-    line-height: 1.35 !important;
+    font-size: 0.95rem !important;
+    line-height: 1.3 !important;
+    font-weight: 600 !important;
+  }
+
+  /* CRITICAL: Hide keyboard shortcut [Phím A], [Phím B] on mobile touch devices */
+  .option-shortcut-hint {
+    display: none !important;
+  }
+
+  .option-check-icon {
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    color: var(--primary) !important;
   }
 
   /* 6. Hide duplicate in-card buttons on mobile */
@@ -1923,10 +2023,17 @@ input:checked + .slider:before {
   /* 7. Ergonomic Floating Bottom Bar */
   .mobile-exam-bottom-bar {
     display: block !important;
-    padding: 0.45rem 0.75rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) !important;
-    background: var(--bg-glass) !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 100 !important;
+    background: rgba(11, 15, 25, 0.95) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+    padding: 0.45rem 0.75rem calc(0.45rem + env(safe-area-inset-bottom, 12px)) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5) !important;
   }
 
   .mobile-bottom-controls {
@@ -1947,6 +2054,31 @@ input:checked + .slider:before {
     font-weight: 700 !important;
     min-height: 42px !important;
     border-color: var(--primary) !important;
+  }
+
+  /* 8. Toast Notifications on Mobile: Positioned at TOP so they NEVER block answers */
+  .toast-container {
+    top: calc(65px + env(safe-area-inset-top, 0px)) !important;
+    bottom: auto !important;
+    left: 12px !important;
+    right: 12px !important;
+    z-index: 2000 !important;
+    pointer-events: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+  }
+
+  .toast {
+    pointer-events: auto !important;
+    max-width: 100% !important;
+    width: auto !important;
+    font-size: 0.8rem !important;
+    padding: 0.55rem 0.85rem !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+    animation: toastSlideDown 0.3s ease !important;
   }
 
   /* Table search & filter */
@@ -1980,16 +2112,29 @@ input:checked + .slider:before {
   }
 
   .exam-bar {
-    padding: 0.35rem 0.5rem 0.25rem !important;
+    padding: 0.3rem 0.45rem 0.2rem !important;
   }
 
   .student-name-text {
-    max-width: 75px !important;
+    max-width: 55px !important;
+  }
+
+  .btn-submit-exam {
+    padding: 0.25rem 0.45rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .btn-submit-exam .submit-text {
+    display: none;
+  }
+
+  .btn-submit-exam::after {
+    content: 'Nộp';
   }
 
   .timer-box {
-    padding: 0.2rem 0.48rem !important;
-    font-size: 0.88rem !important;
+    padding: 0.18rem 0.38rem !important;
+    font-size: 0.82rem !important;
   }
 
   .dialogue-bubble {
@@ -1997,7 +2142,7 @@ input:checked + .slider:before {
   }
 
   .option-item {
-    padding: 0.5rem 0.7rem !important;
+    padding: 0.45rem 0.65rem !important;
     min-height: 46px !important;
   }
 
@@ -2007,8 +2152,13 @@ input:checked + .slider:before {
 
   .palette-grid {
     grid-template-columns: repeat(5, 1fr);
-    gap: 0.4rem;
+    gap: 0.35rem;
   }
+}
+
+@keyframes toastSlideDown {
+  from { transform: translateY(-16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 /* ========================================================
