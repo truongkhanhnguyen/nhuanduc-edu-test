@@ -112,6 +112,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       status: 'healthy',
+      version: '1.1.0-mobile-pro',
       school: 'THCS Nhuan Duc',
       uptimeSeconds: Math.floor(process.uptime()),
       timestamp: new Date().toISOString()
