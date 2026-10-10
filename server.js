@@ -234,10 +234,12 @@ const server = http.createServer(async (req, res) => {
         'X-Content-Type-Options': 'nosniff'
       };
 
-      if (isHtml) {
+      if (isHtml || ext === '.css' || ext === '.js') {
         headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+        headers['Pragma'] = 'no-cache';
+        headers['Expires'] = '0';
       } else {
-        headers['Cache-Control'] = 'public, max-age=86400'; // 1 day
+        headers['Cache-Control'] = 'public, max-age=3600';
       }
 
       // Check gzip support
