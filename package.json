@@ -1,0 +1,24 @@
+{
+  "name": "nhuanduc-edu-test",
+  "version": "1.0.0",
+  "description": "Hệ thống khảo sát & kiểm tra Tiếng Anh 9 trực tuyến - THCS Nhuận Đức",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --check server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "education",
+    "english9",
+    "assessment",
+    "anti-cheat",
+    "nhuan-duc",
+    "global-success"
+  ],
+  "author": "Mai Trần Diễm Phúc",
+  "license": "ISC"
+}

@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0b0f19">
+  <title>Khảo Sát & Kiểm Tra Tiếng Anh 9 - THCS Nhuận Đức</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="header">
+    <div class="header-container">
+      <div class="brand" onclick="switchView('student-select')">
+        <div class="brand-icon">🇬🇧</div>
+        <div class="brand-info">
+          <h1>NHUẬN ĐỨC EDU TEST</h1>
+          <span>THCS Nhuận Đức • GV: Mai Trần Diễm Phúc</span>
+        </div>
+      </div>
+
+      <nav class="nav-actions">
+        <button class="tab-btn active" data-view-target="student-select">
+          <span>🎓</span> Học sinh làm bài
+        </button>
+        <button class="tab-btn" data-view-target="vocab">
+          <span>📖</span> Từ vựng Unit 3
+        </button>
+        <button class="tab-btn teacher-gate-btn" onclick="promptTeacherAccess()" title="Khu vực dành cho giáo viên (Cần mật khẩu bảo vệ)">
+          <span>🔒</span> Giáo viên
+        </button>
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Chuyển chế độ sáng/tối">
+          ☀️
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+
+    <!-- VIEW 1: STUDENT SELECTION & SETUP -->
+    <section id="view-student-select" class="view-section active">
+      <div class="hero-card">
+        <div class="hero-header">
+          <div>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <span class="badge badge-primary">Môn Ngoại ngữ 1 - Tiếng Anh 9</span>
+              <span class="badge badge-secondary">Chương trình GDPT 2018</span>
+              <span class="badge badge-warning">Năm học 2026-2027</span>
+            </div>
+            <h2 class="test-title">UNIT 3: HEALTHY LIVING FOR TEENS</h2>
+            <p class="test-sub">Period 18: A CLOSER LOOK 2 • Khảo sát & Đánh giá thường xuyên từ vựng ngữ cảnh</p>
+          </div>
+          <div style="text-align:right;">
+            <span class="badge badge-success" style="font-size:0.85rem; padding: 0.4rem 0.9rem;">
+              ⏳ Thời gian: 45 phút • 40 câu trắc nghiệm
+            </span>
+          </div>
+        </div>
+
+        <div class="setup-grid">
+          <div>
+            <!-- Login Code Input -->
+            <div class="form-group">
+              <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>🔑 1. Nhập Mã dự thi của bạn:</span>
+                <span class="badge badge-primary" style="font-size:0.75rem;">Mã 4 số (VD: 9201)</span>
+              </label>
+              <div class="login-code-input-wrap">
+                <input type="text" id="loginCodeInput" class="form-input" placeholder="Ví dụ: 9201, 9205 hoặc 9512..." maxlength="12" autocomplete="off" onkeyup="if(event.key==='Enter') verifyStudentLoginCode()">
+                <button class="btn btn-primary" id="btnVerifyCode" onclick="verifyStudentLoginCode()">
+                  🔍 Xác nhận mã
+                </button>
+              </div>
+              <small class="form-hint">
+                💡 Thí sinh nhập mã dự thi 4 chữ số do cô Mai Trần Diễm Phúc cấp (Ví dụ: <code>9201</code> là STT 1 lớp 9.2C, <code>9502</code> là STT 2 lớp 9.5C). Hoặc chọn danh sách lớp bên dưới:
+              </small>
+            </div>
+
+            <!-- Alternative manual selector -->
+            <details style="margin-bottom: 1.25rem; background: var(--bg-secondary); padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px dashed var(--border-color);">
+              <summary style="font-size:0.84rem; color:var(--text-muted); cursor:pointer; font-weight:600;">
+                Hoặc bấm vào đây để chọn danh sách thủ công theo Lớp
+              </summary>
+              <div style="margin-top:0.75rem; display:flex; flex-direction:column; gap:0.65rem;">
+                <div>
+                  <label class="form-label" style="font-size:0.8rem;">Chọn lớp:</label>
+                  <select id="classSelect" class="form-select" style="font-size:0.85rem;">
+                    <!-- Populated by JS -->
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size:0.8rem;">Chọn học sinh:</label>
+                  <select id="studentSelect" class="form-select" style="font-size:0.85rem;">
+                    <!-- Populated by JS -->
+                  </select>
+                </div>
+              </div>
+            </details>
+
+            <div class="form-group">
+              <label class="form-label">2. Chọn chế độ làm bài:</label>
+              <div class="mode-selector">
+                <div class="mode-option selected" data-mode="full">
+                  <div class="mode-title">🌟 Đề đầy đủ</div>
+                  <div class="mode-desc">40 câu trọn vẹn (45 phút) - Khảo sát toàn diện</div>
+                </div>
+                <div class="mode-option" data-mode="set1">
+                  <div class="mode-title">⚡ Đề rút gọn Set 1</div>
+                  <div class="mode-desc">20 câu đầu (20 phút) - Luyện tập nhanh</div>
+                </div>
+                <div class="mode-option" data-mode="set2">
+                  <div class="mode-title">⚡ Đề rút gọn Set 2</div>
+                  <div class="mode-desc">20 câu sau (20 phút) - Nâng cao phản xạ</div>
+                </div>
+              </div>
+
+              <!-- Exam Shuffling & Display Customization -->
+              <div class="toggle-group">
+                <label class="toggle-item">
+                  <div class="toggle-info">
+                    <span class="toggle-title">🔀 Đảo ngẫu nhiên thứ tự câu hỏi</span>
+                    <span class="toggle-desc">Mỗi học sinh sẽ có 1 mã đề và thứ tự câu riêng biệt</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="shuffleQuestionsToggle" checked>
+                    <span class="slider"></span>
+                  </label>
+                </label>
+
+                <label class="toggle-item">
+                  <div class="toggle-info">
+                    <span class="toggle-title">🔀 Đảo ngẫu nhiên phương án (A, B, C, D)</span>
+                    <span class="toggle-desc">Hoán đổi vị trí các lựa chọn để chống nhìn bài</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="shuffleOptionsToggle" checked>
+                    <span class="slider"></span>
+                  </label>
+                </label>
+
+                <label class="toggle-item">
+                  <div class="toggle-info">
+                    <span class="toggle-title">✨ Điền từ trực tiếp vào câu thoại</span>
+                    <span class="toggle-desc">Tự động điền đáp án chọn vào chỗ trống để kiểm tra ngữ pháp</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="liveFillPreviewToggle" checked>
+                    <span class="slider"></span>
+                  </label>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label">Thông tin xác thực thí sinh:</label>
+            <div id="studentPreview" class="student-preview-card">
+              <!-- Populated by JS -->
+            </div>
+
+            <div style="margin-top: 1.25rem; background: rgba(99, 102, 241, 0.08); border-radius: var(--radius-md); padding: 1.15rem; border: 1px solid var(--border-color);">
+              <h4 style="font-size: 0.92rem; color: var(--text-main); margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.4rem;">
+                📌 Hướng dẫn & Quy chế phòng thi trực tuyến:
+              </h4>
+              <ul style="font-size: 0.82rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6;">
+                <li>Đọc kỹ đoạn hội thoại và chọn từ vựng thích hợp nhất trong 4 phương án A, B, C, D.</li>
+                <li><strong>Xác thực khuôn mặt:</strong> Khi bấm <em>"Bắt đầu làm bài"</em>, pop-up camera sẽ mở để chụp ảnh chân dung (camera tắt ngay sau khi chụp, không quay liên tục).</li>
+                <li><strong>Quét mặt ngẫu nhiên:</strong> Trong lúc thi, hệ thống sẽ mở pop-up quét mặt đột xuất <strong>1-3 lần</strong> rồi tắt để em làm tiếp. Ảnh sẽ lưu kèm bài nộp để giáo viên đối chiếu.</li>
+                <li><strong>Chống gian lận:</strong> Nghiêm cấm thoát tab hoặc chuyển ứng dụng. Vi phạm quá 3 lần sẽ bị tự động thu bài.</li>
+              </ul>
+            </div>
+
+            <button id="startExamBtn" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1.25rem;">
+              🚀 Bắt đầu làm bài thi ngay
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: EXAM SESSION -->
+    <section id="view-exam" class="view-section">
+      <!-- Sticky Exam Status Bar -->
+      <div class="exam-bar">
+        <div style="display:flex; align-items:center; gap: 0.75rem; flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="promptExitExam()" style="padding:0.4rem 0.8rem; font-size:0.82rem;" title="Thoát khỏi bài thi">
+            ⬅ Thoát
+          </button>
+          <div>
+            <strong id="examStudentName" style="color:var(--text-main); font-size:1.05rem;">Học sinh</strong>
+            <span class="badge badge-primary" id="examClassName" style="margin-left:0.4rem;">9.2C</span>
+          </div>
+          <span id="examCodeBadge" class="exam-code-badge">Mã đề: <strong id="examCodeDisplay">901</strong></span>
+          <div style="font-size: 0.9rem; color:var(--text-muted);">
+            Tiến độ: <strong id="answeredCount" style="color:var(--primary);">0/<span id="examTotalQ">40</span></strong> câu
+          </div>
+          <div id="antiCheatBadge" class="anticheat-badge" title="Hệ thống tự động phát hiện chuyển tab hoặc rời ứng dụng">
+            🛡️ Giám sát: 0 vi phạm
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap: 0.75rem;">
+          <div class="font-scale-controls" title="Điều chỉnh cỡ chữ đề thi">
+            <button class="font-scale-btn" onclick="adjustExamFontSize(-1)">A-</button>
+            <button class="font-scale-btn" onclick="adjustExamFontSize(1)">A+</button>
+          </div>
+          <div id="examTimer" class="timer-box">
+            ⏱️ 45:00
+          </div>
+          <button class="btn btn-success" onclick="promptSubmit()">
+            📤 Nộp bài thi
+          </button>
+        </div>
+
+        <!-- Real-time Exam Progress Bar -->
+        <div class="exam-progress-bar-wrap" title="Tiến độ làm bài">
+          <div id="examProgressBar" class="exam-progress-bar-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <div class="exam-layout" style="margin-top: 1.5rem;">
+        <!-- Left / Center: Question Panel -->
+        <div class="exam-main">
+          <div class="question-card" id="questionCardBody">
+            <!-- Question Instruction & Topic Header -->
+            <div class="question-instruction">
+              <div>
+                <span class="instruction-topic" id="questionTopicBadge">Unit 3: Healthy Living</span>
+                <span style="margin-left:0.5rem; font-weight:600;">Chọn từ/cụm từ đúng nhất để điền vào chỗ trống:</span>
+              </div>
+              <div id="shuffleBadge" class="badge badge-secondary" style="font-size:0.75rem;">🔀 Đề đã xáo trộn câu</div>
+            </div>
+
+            <div class="question-meta">
+              <div class="question-number">
+                <span>Câu <span id="currentQNum">1</span></span>
+                <small style="color:var(--text-dim); font-size:0.85rem; font-weight:normal;">/ <span id="totalQNum">40</span></small>
+              </div>
+              <button id="flagBtn" class="flag-btn" onclick="toggleFlag()">
+                🏳️ Đặt cờ xem lại
+              </button>
+            </div>
+
+            <!-- Dialogue Speech Bubbles -->
+            <div id="dialogueContainer" class="dialogue-container">
+              <!-- Populated by JS -->
+            </div>
+
+            <!-- 4 Options -->
+            <div id="optionsContainer" class="options-list">
+              <!-- Populated by JS -->
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="question-nav-actions">
+              <button id="prevQBtn" class="btn btn-secondary" onclick="prevQuestion()">
+                ⬅ Câu trước
+              </button>
+              <span style="font-size:0.82rem; color:var(--text-dim);">
+                Mẹo: Dùng phím mũi tên ⬅ ➔ hoặc A, B, C, D
+              </span>
+              <button id="nextQBtn" class="btn btn-primary" onclick="nextQuestion()">
+                Câu sau ➔
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Question Palette / Grid -->
+        <aside>
+          <div class="palette-card">
+            <div class="palette-header">
+              <h3>Bảng câu hỏi</h3>
+              <span style="font-size:0.75rem; color:var(--text-dim);">Nhấn để chuyển câu</span>
+            </div>
+
+            <div class="palette-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--primary);"></div> Đã chọn</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--bg-secondary); border:1px solid var(--border-color);"></div> Chưa làm</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--secondary);"></div> Đang xem</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--warning);"></div> Có đặt cờ</div>
+            </div>
+
+            <div id="paletteGrid" class="palette-grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Mobile Floating Bottom Bar for Exam -->
+      <div id="mobileExamBar" class="mobile-exam-bottom-bar">
+        <div class="mobile-bottom-controls">
+          <button id="mobilePrevBtn" class="btn btn-secondary" onclick="prevQuestion()" style="padding:0.6rem 0.95rem; font-size:0.85rem;">
+            ⬅ Trước
+          </button>
+          <button class="btn btn-secondary" onclick="openMobilePalette()" style="flex:1; border-color:var(--primary); font-weight:700; font-size:0.88rem; padding:0.6rem 0.6rem; display:flex; align-items:center; justify-content:center; gap:0.4rem;">
+            📋 Câu <span id="mobileQCurrent">1</span>/<span id="mobileQTotal">40</span> <span>▲</span>
+          </button>
+          <button id="mobileNextBtn" class="btn btn-primary" onclick="nextQuestion()" style="padding:0.6rem 0.95rem; font-size:0.85rem;">
+            Sau ➔
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: TEST RESULT & DETAILED REVIEW -->
+    <section id="view-result" class="view-section">
+      <div class="subview-nav-bar">
+        <button class="btn-back" onclick="switchView('student-select')">
+          ⬅ Về màn hình đăng nhập
+        </button>
+      </div>
+
+      <div class="result-card">
+        <span class="badge badge-success" style="font-size:0.85rem; padding:0.4rem 1rem;">
+          Kết quả bài thi trực tuyến
+        </span>
+
+        <h2 style="font-family:var(--font-heading); font-size:1.85rem; margin-top:0.6rem;">
+          <span id="resStudentName">Học sinh</span> (<span id="resClassName">9.2C</span>)
+        </h2>
+        <div style="margin-top:0.35rem; display:flex; justify-content:center; align-items:center; gap:0.5rem;">
+          <span class="exam-code-badge">Mã đề: <strong id="resExamCode">901</strong></span>
+          <span id="resAntiCheatSummary"></span>
+        </div>
+
+        <!-- Circular Score Ring -->
+        <div class="score-circle">
+          <div id="resScore" class="score-number">8.5</div>
+          <div class="score-label">Thang điểm 10</div>
+        </div>
+
+        <div id="resEvaluation" style="margin-bottom:1rem;">
+          <!-- Evaluation badge -->
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="stats-bar">
+          <div class="stat-item">
+            <h5>Số câu đúng</h5>
+            <p id="resCorrect" style="color:var(--success);">34/40</p>
+          </div>
+          <div class="stat-item">
+            <h5>Độ chính xác</h5>
+            <p id="resAccuracy" style="color:var(--primary);">85%</p>
+          </div>
+          <div class="stat-item">
+            <h5>Thời gian hoàn thành</h5>
+            <p id="resTime">32 phút</p>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:center; gap:1rem; margin-bottom:2rem; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="switchView('student-select')">
+            🔄 Về trang chủ / Bài thi mới
+          </button>
+          <button class="btn btn-secondary" onclick="window.print()">
+            🖨️ In / Lưu kết quả này
+          </button>
+        </div>
+
+        <!-- Detailed Review List -->
+        <div class="review-section">
+          <h3 style="font-family:var(--font-heading); font-size:1.35rem; margin-bottom:1.25rem;">
+            📝 Chi tiết bài làm & Lời giải từ vựng Unit 3
+          </h3>
+          <div id="resultReviewList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: VOCABULARY STUDY / FLASHCARDS -->
+    <section id="view-vocab" class="view-section">
+      <div class="subview-nav-bar">
+        <button class="btn-back" onclick="switchView('student-select')">
+          ⬅ Về màn hình làm bài
+        </button>
+      </div>
+
+      <div class="hero-card" style="margin-bottom:1.5rem;">
+        <div class="hero-header" style="margin-bottom:0.5rem;">
+          <div>
+            <span class="badge badge-secondary">Từ điển Mini Unit 3</span>
+            <h2 class="test-title">16 Từ Vựng Trọng Tâm (Healthy Living for Teens)</h2>
+            <p class="test-sub">Bấm nút 🔊 bên cạnh mỗi từ để nghe phát âm giọng bản ngữ chuẩn (US Accent).</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="vocabGrid" class="vocab-grid">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- VIEW 5: TEACHER DASHBOARD -->
+    <section id="view-teacher" class="view-section">
+      <div class="subview-nav-bar">
+        <button class="btn-back" onclick="switchView('student-select')">
+          ⬅ Về màn hình thi học sinh
+        </button>
+        <div style="display:flex; gap:0.65rem; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="openLoginCodesModal()" style="font-size:0.85rem; padding:0.45rem 0.95rem;">
+            📋 Danh sách Mã dự thi (Giao học sinh)
+          </button>
+          <button class="btn btn-secondary" onclick="resetAllSubmissionsPrompt()" style="font-size:0.85rem; padding:0.45rem 0.95rem;" title="Xóa toàn bộ kết quả bài nộp để bắt đầu kỳ thi mới">
+            🗑️ Reset trắng bảng điểm
+          </button>
+          <button class="btn btn-danger" onclick="logoutTeacher()" style="font-size:0.85rem; padding:0.45rem 0.95rem;">
+            🔒 Khóa & Đăng xuất
+          </button>
+        </div>
+      </div>
+      <!-- Teacher KPI Cards -->
+      <div class="teacher-kpis">
+        <div class="kpi-card">
+          <div class="kpi-icon blue">👥</div>
+          <div class="kpi-details">
+            <h4>Tổng số học sinh (2 lớp)</h4>
+            <p id="kpiTotalStudents">72</p>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon green">✅</div>
+          <div class="kpi-details">
+            <h4>Đã nộp bài kiểm tra</h4>
+            <p id="kpiCompleted">20</p>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon amber">⭐</div>
+          <div class="kpi-details">
+            <h4>Điểm trung bình</h4>
+            <p id="kpiAverageScore">7.8</p>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon purple">🎯</div>
+          <div class="kpi-details">
+            <h4>Tỷ lệ đạt (>= 5.0)</h4>
+            <p id="kpiPassRate">95%</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item Analysis (Phân tích câu hỏi sai nhiều nhất) -->
+      <div class="hero-card" style="padding:1.5rem; margin-bottom:1.75rem;">
+        <h3 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.5rem;">
+          🔍 Phân tích các câu hỏi học sinh hay nhầm lẫn nhất (Top 5 Mistaken Questions)
+        </h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+          Giúp giáo viên Mai Trần Diễm Phúc nhận biết ngay các từ vựng mà học sinh còn yếu để củng cố lại trên lớp:
+        </p>
+        <div id="itemAnalysisList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Gradebook Table Card -->
+      <div class="table-card">
+        <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border-color);">
+          <div class="table-toolbar">
+            <!-- Class Tabs -->
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <button class="tab-btn active" data-teacher-class="all" onclick="setTeacherClassFilter('all')">
+                Tất cả học sinh (72)
+              </button>
+              <button class="tab-btn" data-teacher-class="9.2C" onclick="setTeacherClassFilter('9.2C')">
+                Lớp 9.2C (43)
+              </button>
+              <button class="tab-btn" data-teacher-class="9.5C" onclick="setTeacherClassFilter('9.5C')">
+                Lớp 9.5C (29)
+              </button>
+            </div>
+
+            <!-- Search & Actions -->
+            <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+              <div class="table-search">
+                <span>🔍</span>
+                <input type="text" placeholder="Tìm tên hoặc mã ĐD..." oninput="handleTeacherSearch(event)">
+              </div>
+
+              <select class="form-select" style="width:160px; padding:0.45rem 0.75rem; font-size:0.85rem;" onchange="handleTeacherStatusFilter(event)">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="done">Đã nộp bài</option>
+                <option value="pending">Chưa làm bài</option>
+              </select>
+
+              <button class="btn btn-success" onclick="exportExcelGradebook()">
+                📥 Xuất bảng điểm Excel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">STT</th>
+                <th>Mã định danh</th>
+                <th>Họ và tên</th>
+                <th>Lớp</th>
+                <th>Ngày sinh</th>
+                <th>Giới tính</th>
+                <th>Trạng thái</th>
+                <th>Mã đề</th>
+                <th>Điểm ĐĐGtx</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="teacherTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: CONFIRM SUBMIT -->
+  <div id="confirmSubmitModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:480px; text-align:center;">
+      <div class="modal-header" style="justify-content:center; border:none; padding-bottom:0;">
+        <div style="font-size:2.8rem; margin-bottom:0.5rem;">📤</div>
+      </div>
+      <h3 style="font-family:var(--font-heading); font-size:1.35rem; margin-bottom:0.75rem;">
+        Xác nhận nộp bài thi
+      </h3>
+      <div id="confirmSubmitText" style="margin-bottom:1.5rem;">
+        <!-- Text dynamic -->
+      </div>
+      <div style="display:flex; gap:0.75rem; justify-content:center;">
+        <button class="btn btn-secondary" onclick="closeSubmitModal()">
+          Làm tiếp bài thi
+        </button>
+        <button class="btn btn-success" onclick="submitExam(false)">
+          Nộp bài ngay
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VIEW STUDENT DETAIL -->
+  <div id="studentDetailModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalStudentTitle" style="font-family:var(--font-heading); font-size:1.2rem;">
+          Chi tiết bài làm
+        </h3>
+        <button class="modal-close-btn" onclick="closeStudentDetailModal()">✕</button>
+      </div>
+      <div id="modalStudentContent">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ANTI-CHEAT WARNING (AZOTA STYLE) -->
+  <div id="antiCheatModal" class="modal-overlay">
+    <div class="modal-box anticheat-modal-box" style="max-width:460px; text-align:center;">
+      <div style="font-size:3.5rem; margin-bottom:0.4rem;">⚠️</div>
+      <h3 style="font-family:var(--font-heading); font-size:1.35rem; color:var(--danger); margin-bottom:0.6rem;">
+        CẢNH BÁO RỜI MÀN HÌNH THI!
+      </h3>
+      <div style="margin-bottom:1.4rem; font-size:0.95rem; line-height:1.6;">
+        <p>Hệ thống phát hiện bạn vừa <strong>chuyển tab</strong> hoặc <strong>thoát ứng dụng</strong> trong khi đang làm bài!</p>
+        <div style="background:rgba(244,63,94,0.12); border:1px solid rgba(244,63,94,0.3); padding:0.75rem; border-radius:var(--radius-sm); margin:0.75rem 0;">
+          Số lần vi phạm đã ghi nhận: <strong id="antiCheatModalCount" style="font-size:1.4rem; color:var(--danger);">1</strong> lần
+        </div>
+        <p style="font-size:0.85rem; color:var(--text-muted);">
+          📌 Nhật ký thời gian vi phạm đã được gửi trực tiếp vào bảng điểm của <strong>Giáo viên Mai Trần Diễm Phúc</strong>. Vui lòng giữ màn hình làm bài trung thực!
+        </p>
+      </div>
+      <button class="btn btn-danger btn-lg" onclick="acknowledgeAntiCheatWarning()" style="width:100%; font-weight:700;">
+        Tôi cam kết quay lại làm bài trung thực
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: TEACHER AUTHENTICATION (PASSWORD GATEKEEPER) -->
+  <div id="teacherAuthModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 style="font-family:var(--font-heading); font-size:1.2rem; color:var(--warning);">
+          🔒 Xác thực Giáo viên Mai Trần Diễm Phúc
+        </h3>
+        <button class="modal-close-btn" onclick="closeTeacherAuthModal()">✕</button>
+      </div>
+      <div style="padding:0.5rem 0 1rem;">
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">
+          Khu vực quản lý bảng điểm và phân tích câu hỏi. Vui lòng nhập mật khẩu giáo viên để tiếp tục:
+        </p>
+        <div class="form-group" style="margin-bottom:1.25rem;">
+          <label class="form-label">Mật khẩu giáo viên:</label>
+          <input type="password" id="teacherPasswordInput" class="form-input" placeholder="Nhập mật khẩu..." autocomplete="current-password" onkeyup="if(event.key==='Enter') submitTeacherAuth()">
+          <small class="form-hint">Khu vực dành riêng cho giáo viên bộ môn</small>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+          <button class="btn btn-secondary" onclick="closeTeacherAuthModal()">Hủy bỏ</button>
+          <button class="btn btn-primary" onclick="submitTeacherAuth()">Đăng nhập</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: STUDENT LOGIN CODES LIST (FOR TEACHER) -->
+  <div id="loginCodesModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:850px; max-height:90vh; overflow-y:auto;">
+      <div class="modal-header">
+        <h3 style="font-family:var(--font-heading); font-size:1.2rem;">
+          📋 Danh sách Mã dự thi (Cấp cho học sinh)
+        </h3>
+        <button class="modal-close-btn" onclick="closeLoginCodesModal()">✕</button>
+      </div>
+      <div style="padding:0.5rem 0;">
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">
+          Giáo viên sao chép hoặc in danh sách này để giao cho học sinh. Học sinh chỉ cần nhập Mã dự thi (4 số) là vào ngay bài test của mình:
+        </p>
+        <div style="display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="copyLoginCodesToClipboard()">
+            📋 Sao chép danh sách để gửi Zalo
+          </button>
+          <button class="btn btn-success btn-sm" onclick="exportLoginCodesCSV()">
+            📥 Xuất file Excel mã dự thi (.csv)
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="printLoginCodes()">
+            🖨️ In danh sách mã
+          </button>
+        </div>
+
+        <div class="table-responsive" style="max-height:480px; overflow-y:auto;">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width:60px;">STT</th>
+                <th>Mã dự thi</th>
+                <th>Họ và tên</th>
+                <th>Lớp</th>
+                <th>Ngày sinh</th>
+                <th>Giới tính</th>
+                <th>Mã định danh</th>
+              </tr>
+            </thead>
+            <tbody id="loginCodesTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRM EXIT EXAM -->
+  <div id="exitExamModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:440px; text-align:center;">
+      <div style="font-size:3rem; margin-bottom:0.5rem;">⚠️</div>
+      <h3 style="font-family:var(--font-heading); font-size:1.3rem; color:var(--warning); margin-bottom:0.6rem;">
+        Bạn có chắc muốn thoát bài thi?
+      </h3>
+      <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem; line-height:1.6;">
+        Bài kiểm tra đang diễn ra! Nếu thoát ra ngoài, tiến trình của bạn sẽ bị gián đoạn và hệ thống sẽ ghi nhận lần rời bài thi.
+      </p>
+      <div style="display:flex; justify-content:center; gap:0.75rem;">
+        <button class="btn btn-primary" onclick="closeExitExamModal()">
+          Tiếp tục làm bài
+        </button>
+        <button class="btn btn-danger" onclick="confirmExitExam()">
+          Đồng ý thoát
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FACE CAPTURE (INITIAL ON START & RANDOM AUDITS IN-EXAM) -->
+  <div id="faceCaptureModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:480px; text-align:center;">
+      <div class="modal-header" style="justify-content:center; border-bottom:none; padding-bottom:0;">
+        <h3 id="faceCaptureTitle" style="font-family:var(--font-heading); font-size:1.3rem; color:var(--primary);">
+          📸 XÁC THỰC KHUÔN MẶT ĐẦU GIỜ THI
+        </h3>
+      </div>
+      <p id="faceCaptureDesc" style="font-size:0.88rem; color:var(--text-muted); margin:0.5rem 0 1rem; line-height:1.5;">
+        Vui lòng nhìn thẳng vào camera và nhấn nút <strong>"Chụp ảnh"</strong> bên dưới để tiếp tục. Camera sẽ tự động tắt ngay sau khi chụp.
+      </p>
+
+      <div class="webcam-viewport-wrap" style="width:100%; max-width:380px; height:260px; margin:0 auto 1.25rem;">
+        <video id="modalWebcamVideo" autoplay playsinline muted></video>
+        <canvas id="modalWebcamCanvas" style="display:none;"></canvas>
+        <div class="face-scanner-guide" id="modalScannerGuide">
+          <div class="face-oval"></div>
+          <div class="scanner-laser"></div>
+        </div>
+        <div id="modalCapturedPreview" class="captured-preview" style="display:none;">
+          <img id="modalCapturedImg" src="" alt="Ảnh chân dung thí sinh">
+          <div class="captured-tag">✅ Đã chụp thành công</div>
+        </div>
+      </div>
+
+      <div id="modalCaptureStatus" style="font-size:0.88rem; font-weight:600; margin-bottom:1rem; color:var(--text-muted);">
+        Đang khởi động camera...
+      </div>
+
+      <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+        <button type="button" class="btn btn-primary btn-lg" id="btnModalCapture" onclick="handleModalCapturePhoto()">
+          📸 Chụp ảnh khuôn mặt
+        </button>
+        <button type="button" class="btn btn-secondary" id="btnModalRetake" onclick="handleModalRetakePhoto()" style="display:none;">
+          🔄 Chụp lại
+        </button>
+        <button type="button" class="btn btn-success btn-lg" id="btnModalContinue" onclick="handleModalConfirmAndContinue()" style="display:none;">
+          Tiếp tục làm bài ➔
+        </button>
+      </div>
+
+      <div id="modalNoCameraFallback" style="display:none; margin-top:1rem;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="bypassCameraVerification()" style="font-size:0.8rem; color:var(--text-dim);">
+          Thiết bị không có Camera (Bỏ qua & ghi chú vào bài thi)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRAWER: MOBILE QUESTION PALETTE -->
+  <div id="mobilePaletteDrawer" class="mobile-palette-drawer" onclick="handleDrawerBackdropClick(event)">
+    <div class="mobile-drawer-sheet">
+      <div class="drawer-drag-handle"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 style="font-family:var(--font-heading); font-size:1.1rem; color:var(--text-main);">
+          Bảng câu hỏi (<span id="mobileDrawerAnswered">0</span>/<span id="mobileDrawerTotal">40</span>)
+        </h3>
+        <button class="modal-close-btn" onclick="closeMobilePalette()">✕</button>
+      </div>
+
+      <div class="palette-legend" style="margin-bottom:1.25rem;">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--primary);"></div> Đã làm</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--bg-secondary); border:1px solid var(--border-color);"></div> Chưa làm</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--secondary);"></div> Đang xem</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--warning);"></div> Có cờ</div>
+      </div>
+
+      <div id="mobilePaletteGrid" class="palette-grid" style="max-height:48vh; gap:0.45rem;">
+        <!-- Populated by JS -->
+      </div>
+
+      <button class="btn btn-secondary" onclick="closeMobilePalette()" style="width:100%; margin-top:1.25rem;">
+        Đóng bảng câu hỏi
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
