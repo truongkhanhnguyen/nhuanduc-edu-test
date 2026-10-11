@@ -102,13 +102,31 @@ function adjustExamFontSize(delta) {
 // LOCAL STORAGE & SERVER SYNC MANAGEMENT
 // ==========================================
 
+function normalizeSubmissionScore(sub) {
+  if (!sub) return sub;
+  if (sub.correctCount !== undefined && sub.totalQuestions) {
+    const raw = (sub.correctCount / sub.totalQuestions) * 10;
+    const exact = Math.round(raw * 100) / 100;
+    if (typeof sub.score === 'number' && Math.abs(sub.score - exact) < 0.06) {
+      sub.score = exact;
+    }
+  }
+  return sub;
+}
+
 function getSubmissions() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       return {};
     }
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    for (const key in data) {
+      if (data[key]) {
+        data[key] = normalizeSubmissionScore(data[key]);
+      }
+    }
+    return data;
   } catch (e) {
     console.error('Failed to read storage', e);
     return {};
@@ -121,6 +139,11 @@ async function syncSubmissionsFromServer() {
     if (res.ok) {
       const json = await res.json();
       if (json && json.success && json.data) {
+        for (const key in json.data) {
+          if (json.data[key]) {
+            json.data[key] = normalizeSubmissionScore(json.data[key]);
+          }
+        }
         // Synchronize server database state to client
         localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data));
         if (state.currentView === 'teacher') {
@@ -278,7 +301,7 @@ function switchView(viewName, updateHistory = true) {
 
   state.currentView = viewName;
 
-  if (document.body) {
+  if (document.body && document.body.classList) {
     document.body.classList.toggle('in-exam-mode', viewName === 'exam');
   }
 
@@ -845,7 +868,23 @@ function updateStudentPreview() {
         Lớp: <strong>${state.selectedClass}</strong> | STT: <strong>${s.stt}</strong> | Ngày sinh: <strong>${s.dob}</strong>
       </p>
       <p style="font-size:0.8rem; color:var(--text-dim); margin-top:2px;">Mã ĐD Bộ GD&ĐT: <code>${s.code}</code></p>
-      ${pastRecord ? `<p style="color: var(--success); margin-top: 4px; font-weight:600;">✓ Đã hoàn thành lần thi trước: <strong>${pastRecord.score}/10 điểm</strong> (${pastRecord.submittedAt}). Bạn có thể làm lại để cải thiện kết quả.</p>` : ''}
+      ${pastRecord ? `
+        <div style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:var(--radius-sm); padding:0.65rem 0.85rem; margin-top:0.6rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div>
+              <p style="color: var(--success); font-weight:700; margin:0; font-size:0.95rem;">
+                ✓ Đã hoàn thành lần thi trước: <span style="font-size:1.15rem; color:var(--success);">${pastRecord.score}/10 điểm</span> (${pastRecord.correctCount !== undefined ? pastRecord.correctCount : Math.round((pastRecord.score / 10) * (pastRecord.totalQuestions || 40))}/${pastRecord.totalQuestions || 40} câu đúng)
+              </p>
+              <p style="color: var(--text-muted); font-size:0.8rem; margin:3px 0 0 0;">
+                Mã đề: <strong>${pastRecord.examCode || '901'}</strong> • Thời điểm: ${pastRecord.submittedAt}
+              </p>
+            </div>
+            <button type="button" class="btn btn-secondary" style="font-size:0.85rem; padding:0.4rem 0.85rem; border-color:var(--success); color:var(--success); display:inline-flex; align-items:center; gap:0.35rem;" onclick="reviewPastSubmission('${state.selectedClass}', '${s.code}')">
+              👁️ Xem lại chi tiết bài làm & Lời giải
+            </button>
+          </div>
+        </div>
+      ` : ''}
     </div>
   `;
 
@@ -854,6 +893,34 @@ function updateStudentPreview() {
     startBtn.style.opacity = '1';
     startBtn.style.cursor = 'pointer';
   }
+}
+
+function reviewPastSubmission(classId, studentCode) {
+  const submissions = getSubmissions();
+  const pastRecord = submissions[`${classId}_${studentCode}`];
+  if (!pastRecord) {
+    showToast('Không tìm thấy dữ liệu bài làm trước đó!', 'warning');
+    return;
+  }
+
+  // Populate activeQuestions if answersDetail exists so review screen can render fully
+  if (pastRecord.answersDetail && pastRecord.answersDetail.length > 0) {
+    state.activeQuestions = pastRecord.answersDetail.map(d => ({
+      id: d.questionId,
+      vocab: d.vocab,
+      dialogue: d.dialogue,
+      options: d.options,
+      correct: d.correctKey,
+      explanation: d.explanation
+    }));
+  } else {
+    state.activeQuestions = [...APP_DATA.questions];
+  }
+
+  state.lastResult = pastRecord;
+  renderResultScreen(pastRecord);
+  switchView('result', true);
+  showToast(`Đang hiển thị lại bài thi của ${pastRecord.studentName} (${pastRecord.score}/10 điểm)`, 'info');
 }
 
 // ==========================================
@@ -1431,16 +1498,36 @@ function submitExam(isAuto = false) {
   stopWebcamStream();
   state.isSubmitted = true;
 
-  // Grade calculation
+  // Grade calculation & Build answersDetail preserving exact options and selections
   let correctCount = 0;
-  state.activeQuestions.forEach(q => {
-    if (state.answers[q.id] === q.correct) {
+  const answersDetail = state.activeQuestions.map((q, idx) => {
+    const userKey = state.answers[q.id] || null;
+    const isCorrect = Boolean(userKey && userKey === q.correct);
+    if (isCorrect) {
       correctCount++;
     }
+    const userText = userKey && q.options && q.options[userKey] ? q.options[userKey] : '';
+    const correctText = q.options && q.options[q.correct] ? q.options[q.correct] : '';
+
+    return {
+      index: idx + 1,
+      questionId: q.id,
+      vocab: q.vocab,
+      dialogue: q.dialogue,
+      options: { ...q.options },
+      userKey: userKey,
+      userText: userText,
+      correctKey: q.correct,
+      correctText: correctText,
+      isCorrect: isCorrect,
+      explanation: q.explanation
+    };
   });
 
   const total = state.activeQuestions.length;
-  const score = Number(((correctCount / total) * 10).toFixed(1));
+  // Exact 2-decimal scale for 0.25 pt increments (e.g. 35/40 = 8.75, 37/40 = 9.25, 39/40 = 9.75)
+  const rawScore = (correctCount / total) * 10;
+  const score = Math.round(rawScore * 100) / 100;
   const timeUsedMinutes = Math.ceil(((state.testMode === 'full' ? 45 * 60 : 20 * 60) - state.timeRemaining) / 60);
 
   const result = {
@@ -1456,6 +1543,7 @@ function submitExam(isAuto = false) {
     timeSpent: `${timeUsedMinutes} phút`,
     submittedAt: new Date().toLocaleString('vi-VN'),
     answers: state.answers,
+    answersDetail: answersDetail,
     cheatCount: state.cheatCount,
     cheatLogs: state.cheatLogs,
     examCode: state.examCode,
@@ -1471,7 +1559,7 @@ function submitExam(isAuto = false) {
 
   renderResultScreen(result);
   switchView('result', true);
-  showToast(`Đã nộp bài thành công! Điểm của bạn: ${score}/10 (Mã đề: ${state.examCode})`, 'success');
+  showToast(`Đã nộp bài thành công! Điểm của bạn: ${score}/10 (${correctCount}/${total} câu đúng - Mã đề: ${state.examCode})`, 'success');
 }
 
 function renderResultScreen(result) {
@@ -1516,36 +1604,97 @@ function renderResultScreen(result) {
   const reviewContainer = document.getElementById('resultReviewList');
   if (!reviewContainer) return;
 
-  reviewContainer.innerHTML = state.activeQuestions.map((q, idx) => {
-    const userAns = result.answers[q.id];
-    const isCorrect = userAns === q.correct;
+  const reviewItems = (result.answersDetail && result.answersDetail.length > 0)
+    ? result.answersDetail
+    : (state.activeQuestions && state.activeQuestions.length > 0)
+      ? state.activeQuestions.map((q, idx) => {
+          const userAns = result.answers ? result.answers[q.id] : null;
+          const isCorrect = userAns === q.correct;
+          return {
+            index: idx + 1,
+            questionId: q.id,
+            vocab: q.vocab,
+            dialogue: q.dialogue,
+            options: q.options,
+            userKey: userAns,
+            userText: userAns && q.options ? q.options[userAns] : '',
+            correctKey: q.correct,
+            correctText: q.options ? q.options[q.correct] : '',
+            isCorrect: isCorrect,
+            explanation: q.explanation
+          };
+        })
+      : APP_DATA.questions.map((q, idx) => {
+          const userAns = result.answers ? result.answers[q.id] : null;
+          const isCorrect = userAns === q.correct;
+          return {
+            index: idx + 1,
+            questionId: q.id,
+            vocab: q.vocab,
+            dialogue: q.dialogue,
+            options: q.options,
+            userKey: userAns,
+            userText: userAns && q.options ? q.options[userAns] : '',
+            correctKey: q.correct,
+            correctText: q.options ? q.options[q.correct] : '',
+            isCorrect: isCorrect,
+            explanation: q.explanation
+          };
+        });
+
+  reviewContainer.innerHTML = reviewItems.map((item, idx) => {
+    const isCorrect = item.isCorrect;
+    const qNum = item.index || (idx + 1);
 
     return `
       <div class="review-item ${isCorrect ? 'correct' : 'incorrect'}">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
           <h4 style="font-size:1rem; font-family:var(--font-heading);">
-            Câu ${idx + 1}: ${isCorrect ? '✅ Đúng' : '❌ Sai'} 
-            <span class="badge ${isCorrect ? 'badge-success' : 'badge-danger'}" style="margin-left:0.5rem;">Từ vựng: ${q.vocab}</span>
+            Câu ${qNum}: ${isCorrect ? '✅ Đúng (+0.25đ)' : '❌ Sai (0đ)'} 
+            <span class="badge ${isCorrect ? 'badge-success' : 'badge-danger'}" style="margin-left:0.5rem;">Từ vựng: ${item.vocab}</span>
           </h4>
           <span style="font-size:0.85rem; color:var(--text-muted);">
-            Lựa chọn của bạn: <strong style="color:${isCorrect ? 'var(--success)' : 'var(--danger)'};">${userAns || '(Chưa chọn)'}</strong> | Đáp án đúng: <strong style="color:var(--success);">${q.correct}</strong>
+            Lựa chọn của bạn: <strong style="color:${isCorrect ? 'var(--success)' : 'var(--danger)'};">${item.userKey ? `${item.userKey}. ${item.userText}` : '(Chưa chọn)'}</strong> 
+            ${!isCorrect ? `| Đáp án đúng: <strong style="color:var(--success);">${item.correctKey}. ${item.correctText}</strong>` : ''}
           </span>
         </div>
 
         <div style="background:var(--bg-primary); padding:0.75rem 1rem; border-radius:var(--radius-sm); margin-bottom:0.75rem;">
-          ${q.dialogue.map(d => `<div style="font-size:0.95rem;"><strong>${d.speaker}:</strong> "${d.text}"</div>`).join('')}
+          ${item.dialogue ? item.dialogue.map(d => `<div style="font-size:0.95rem;"><strong>${d.speaker}:</strong> "${d.text}"</div>`).join('') : ''}
         </div>
 
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.5rem; font-size:0.9rem;">
-          ${Object.entries(q.options).map(([k, val]) => `
-            <div style="padding:0.4rem 0.6rem; border-radius:var(--radius-sm); background:${k === q.correct ? 'rgba(16,185,129,0.18)' : (k === userAns ? 'rgba(244,63,94,0.18)' : 'transparent')}; border:1px solid ${k === q.correct ? 'var(--success)' : (k === userAns ? 'var(--danger)' : 'var(--border-color)')};">
-              <strong>${k}.</strong> ${val} ${k === q.correct ? '✓ (Đáp án chuẩn)' : (k === userAns ? '✗ (Bạn đã chọn)' : '')}
-            </div>
-          `).join('')}
+          ${item.options ? Object.entries(item.options).map(([k, val]) => {
+            const isOptCorrect = k === item.correctKey;
+            const isOptSelected = k === item.userKey;
+            let badgeText = '';
+            let bg = 'transparent';
+            let border = 'var(--border-color)';
+
+            if (isOptCorrect && isOptSelected) {
+              badgeText = '✓ (Bạn chọn đúng)';
+              bg = 'rgba(16,185,129,0.18)';
+              border = 'var(--success)';
+            } else if (isOptCorrect) {
+              badgeText = '✓ (Đáp án chuẩn)';
+              bg = 'rgba(16,185,129,0.18)';
+              border = 'var(--success)';
+            } else if (isOptSelected) {
+              badgeText = '✗ (Bạn đã chọn)';
+              bg = 'rgba(244,63,94,0.18)';
+              border = 'var(--danger)';
+            }
+
+            return `
+              <div style="padding:0.45rem 0.65rem; border-radius:var(--radius-sm); background:${bg}; border:1px solid ${border}; line-height:1.4;">
+                <strong>${k}.</strong> ${val} ${badgeText ? `<span style="font-size:0.8rem; font-weight:700; margin-left:4px;">${badgeText}</span>` : ''}
+              </div>
+            `;
+          }).join('') : ''}
         </div>
 
-        <div class="explanation-box">
-          💡 <strong>Giải thích & Dịch nghĩa:</strong> ${q.explanation}
+        <div class="explanation-box" style="margin-top:0.75rem;">
+          💡 <strong>Giải thích & Dịch nghĩa:</strong> ${item.explanation}
         </div>
       </div>
     `;
@@ -1847,22 +1996,56 @@ function viewStudentDetail(classId, studentCode) {
     <!-- Webcam Face Audit Evidence -->
     ${faceAuditHtml}
 
-    <div style="max-height:450px; overflow-y:auto; padding-right:6px;">
-      ${APP_DATA.questions.map((q, idx) => {
-        const ans = sub.answers ? sub.answers[q.id] : null;
-        const isCorrect = ans === q.correct;
-        return `
-          <div style="padding:0.85rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <strong>Câu ${idx + 1}</strong> (${q.vocab}): 
-              <span style="color:${isCorrect ? 'var(--success)' : 'var(--danger)'}; font-weight:600; margin-left:0.5rem;">
-                ${ans ? `Chọn ${ans}` : '(Chưa chọn)'} ${isCorrect ? '✓' : '✗'}
-              </span>
-            </div>
-            <div>Đáp án chuẩn: <strong style="color:var(--success);">${q.correct}</strong></div>
+    <div style="max-height:480px; overflow-y:auto; padding-right:6px;">
+      ${(sub.answersDetail && Array.isArray(sub.answersDetail) && sub.answersDetail.length > 0)
+        ? sub.answersDetail.map((d, idx) => {
+            const isCorrect = d.isCorrect;
+            return `
+              <div style="padding:0.85rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; flex-wrap:wrap; background:${isCorrect ? 'transparent' : 'rgba(244,63,94,0.04)'};">
+                <div style="flex:1; min-width:240px;">
+                  <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+                    <strong>Câu ${d.index || (idx + 1)}</strong>
+                    <span class="badge ${isCorrect ? 'badge-success' : 'badge-danger'}">Từ vựng: ${d.vocab}</span>
+                    <span style="color:${isCorrect ? 'var(--success)' : 'var(--danger)'}; font-weight:700;">
+                      ${isCorrect ? '✓ Đúng' : '✗ Sai'}
+                    </span>
+                  </div>
+                  <div style="font-size:0.88rem; color:var(--text-main); margin-top:0.2rem;">
+                    Học sinh chọn: <strong style="color:${isCorrect ? 'var(--success)' : 'var(--danger)'};">${d.userKey ? `${d.userKey}. ${d.userText}` : '(Chưa chọn)'}</strong>
+                  </div>
+                  ${!isCorrect ? `
+                    <div style="font-size:0.85rem; color:var(--success); margin-top:3px;">
+                      Đáp án chuẩn: <strong>${d.correctKey}. ${d.correctText}</strong>
+                    </div>
+                  ` : ''}
+                </div>
+                <div style="text-align:right;">
+                  <span class="badge ${isCorrect ? 'badge-success' : 'badge-danger'}" style="font-size:0.8rem;">${isCorrect ? '+0.25đ' : '0đ'}</span>
+                </div>
+              </div>
+            `;
+          }).join('')
+        : `
+          <div style="padding:0.6rem 0.8rem; background:rgba(245,158,11,0.1); border-radius:var(--radius-sm); margin-bottom:0.75rem; font-size:0.85rem; color:var(--warning);">
+            ℹ️ <em>Bài làm này nộp ở phiên bản trước khi cập nhật chi tiết phương án đảo đề. Thống kê tổng: <strong>${sub.correctCount}/${sub.totalQuestions} câu đúng (${sub.score}/10 điểm)</strong>.</em>
           </div>
-        `;
-      }).join('')}
+          ${APP_DATA.questions.map((q, idx) => {
+            const ans = sub.answers ? sub.answers[q.id] : null;
+            const isCorrect = ans === q.correct;
+            return `
+              <div style="padding:0.85rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong>Câu ${idx + 1}</strong> (${q.vocab}): 
+                  <span style="color:${isCorrect ? 'var(--success)' : 'var(--danger)'}; font-weight:600; margin-left:0.5rem;">
+                    ${ans ? `Chọn ${ans}` : '(Chưa chọn)'} ${isCorrect ? '✓' : '✗'}
+                  </span>
+                </div>
+                <div>Đáp án chuẩn: <strong style="color:var(--success);">${q.correct}</strong></div>
+              </div>
+            `;
+          }).join('')}
+        `
+      }
     </div>
   `;
 
@@ -1889,7 +2072,15 @@ function renderItemAnalysis(completedSubmissions) {
     let answeredCount = 0;
 
     completedSubmissions.forEach(sub => {
-      if (sub.answers && sub.answers[q.id]) {
+      if (sub.answersDetail && Array.isArray(sub.answersDetail)) {
+        const item = sub.answersDetail.find(d => d.questionId === q.id);
+        if (item) {
+          answeredCount++;
+          if (!item.isCorrect) {
+            wrongCount++;
+          }
+        }
+      } else if (sub.answers && sub.answers[q.id]) {
         answeredCount++;
         if (sub.answers[q.id] !== q.correct) {
           wrongCount++;

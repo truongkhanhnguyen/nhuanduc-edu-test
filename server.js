@@ -39,13 +39,30 @@ const MIME_TYPES = {
 };
 
 // Database helper functions
+function normalizeSubmission(sub) {
+  if (sub && sub.correctCount !== undefined && sub.totalQuestions) {
+    const raw = (sub.correctCount / sub.totalQuestions) * 10;
+    const exact = Math.round(raw * 100) / 100;
+    if (typeof sub.score === 'number' && Math.abs(sub.score - exact) < 0.06) {
+      sub.score = exact;
+    }
+  }
+  return sub;
+}
+
 function readDb() {
   try {
     if (!fs.existsSync(DB_FILE)) {
       return {};
     }
     const raw = fs.readFileSync(DB_FILE, 'utf8');
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    for (const key in data) {
+      if (data[key]) {
+        data[key] = normalizeSubmission(data[key]);
+      }
+    }
+    return data;
   } catch (err) {
     console.error('[DB Error] Failed to read database:', err);
     return {};
@@ -54,6 +71,11 @@ function readDb() {
 
 function writeDb(data) {
   try {
+    for (const key in data) {
+      if (data[key]) {
+        data[key] = normalizeSubmission(data[key]);
+      }
+    }
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
     return true;
   } catch (err) {
