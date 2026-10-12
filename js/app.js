@@ -1586,7 +1586,7 @@ function renderResultScreen(result) {
   document.getElementById('resScore').textContent = result.score;
   document.getElementById('resCorrect').textContent = `${result.correctCount}/${result.totalQuestions}`;
   document.getElementById('resAccuracy').textContent = `${Math.round((result.correctCount / result.totalQuestions) * 100)}%`;
-  document.getElementById('resTime').textContent = result.timeSpent;
+  document.getElementById('resTime').textContent = result.timeSpent || '--';
 
   // Exam code display
   const resExamCode = document.getElementById('resExamCode');
@@ -2015,7 +2015,7 @@ function viewStudentDetail(classId, studentCode) {
       <div><small style="color:var(--text-muted);">Điểm số:</small><div style="font-size:1.5rem; font-weight:700; color:var(--primary);">${sub.score}/10</div></div>
       <div><small style="color:var(--text-muted);">Số câu đúng:</small><div style="font-size:1.2rem; font-weight:700;">${sub.correctCount}/${sub.totalQuestions}</div></div>
       <div><small style="color:var(--text-muted);">Mã đề thi:</small><div style="font-size:1.15rem; font-weight:700; color:#fbbf24;">${sub.examCode || '901'}</div></div>
-      <div><small style="color:var(--text-muted);">Thời gian nộp:</small><div style="font-size:0.9rem; font-weight:600;">${sub.submittedAt}</div></div>
+      <div><small style="color:var(--text-muted);">Thời gian nộp:</small><div style="font-size:0.9rem; font-weight:600;">${sub.submittedAt || '--'}</div></div>
       <div><small style="color:var(--text-muted);">Mã định danh:</small><div style="font-size:0.9rem; font-family:monospace;">${sub.studentCode}</div></div>
     </div>
 
