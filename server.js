@@ -40,12 +40,20 @@ const MIME_TYPES = {
 
 // Database helper functions
 function normalizeSubmission(sub) {
-  if (sub && sub.correctCount !== undefined && sub.totalQuestions) {
-    const raw = (sub.correctCount / sub.totalQuestions) * 10;
-    const exact = Math.round(raw * 100) / 100;
-    if (typeof sub.score === 'number' && Math.abs(sub.score - exact) < 0.06) {
-      sub.score = exact;
-    }
+  if (!sub) return sub;
+  const total = sub.totalQuestions || (sub.mode === 'set1' || sub.mode === 'set2' ? 20 : 40);
+  sub.totalQuestions = total;
+
+  if (sub.answersDetail && Array.isArray(sub.answersDetail) && sub.answersDetail.length > 0) {
+    const trueCorrect = sub.answersDetail.filter(d => Boolean(d.isCorrect)).length;
+    sub.correctCount = trueCorrect;
+    sub.score = Math.round(((trueCorrect / total) * 10) * 100) / 100;
+  } else if (sub.correctCount !== undefined && sub.correctCount !== null) {
+    sub.correctCount = Math.max(0, Math.min(total, Math.round(Number(sub.correctCount))));
+    sub.score = Math.round(((sub.correctCount / total) * 10) * 100) / 100;
+  } else if (typeof sub.score === 'number') {
+    sub.correctCount = Math.max(0, Math.min(total, Math.round((sub.score / 10) * total)));
+    sub.score = Math.round(((sub.correctCount / total) * 10) * 100) / 100;
   }
   return sub;
 }

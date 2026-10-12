@@ -104,12 +104,19 @@ function adjustExamFontSize(delta) {
 
 function normalizeSubmissionScore(sub) {
   if (!sub) return sub;
-  if (sub.correctCount !== undefined && sub.totalQuestions) {
-    const raw = (sub.correctCount / sub.totalQuestions) * 10;
-    const exact = Math.round(raw * 100) / 100;
-    if (typeof sub.score === 'number' && Math.abs(sub.score - exact) < 0.06) {
-      sub.score = exact;
-    }
+  const total = sub.totalQuestions || (sub.mode === 'set1' || sub.mode === 'set2' ? 20 : 40);
+  sub.totalQuestions = total;
+
+  if (sub.answersDetail && Array.isArray(sub.answersDetail) && sub.answersDetail.length > 0) {
+    const trueCorrect = sub.answersDetail.filter(d => Boolean(d.isCorrect)).length;
+    sub.correctCount = trueCorrect;
+    sub.score = Math.round(((trueCorrect / total) * 10) * 100) / 100;
+  } else if (sub.correctCount !== undefined && sub.correctCount !== null) {
+    sub.correctCount = Math.max(0, Math.min(total, Math.round(Number(sub.correctCount))));
+    sub.score = Math.round(((sub.correctCount / total) * 10) * 100) / 100;
+  } else if (typeof sub.score === 'number') {
+    sub.correctCount = Math.max(0, Math.min(total, Math.round((sub.score / 10) * total)));
+    sub.score = Math.round(((sub.correctCount / total) * 10) * 100) / 100;
   }
   return sub;
 }
@@ -1563,6 +1570,17 @@ function submitExam(isAuto = false) {
 }
 
 function renderResultScreen(result) {
+  // Guarantee strict mathematical harmony between answersDetail and top summary cards
+  if (result.answersDetail && Array.isArray(result.answersDetail) && result.answersDetail.length > 0) {
+    const detailCorrect = result.answersDetail.filter(d => Boolean(d.isCorrect)).length;
+    result.correctCount = detailCorrect;
+    result.totalQuestions = result.answersDetail.length;
+    result.score = Math.round(((detailCorrect / result.totalQuestions) * 10) * 100) / 100;
+  } else if (result.correctCount !== undefined && result.totalQuestions) {
+    result.correctCount = Math.max(0, Math.min(result.totalQuestions, Math.round(Number(result.correctCount))));
+    result.score = Math.round(((result.correctCount / result.totalQuestions) * 10) * 100) / 100;
+  }
+
   document.getElementById('resStudentName').textContent = result.studentName;
   document.getElementById('resClassName').textContent = result.classId;
   document.getElementById('resScore').textContent = result.score;
@@ -1604,101 +1622,110 @@ function renderResultScreen(result) {
   const reviewContainer = document.getElementById('resultReviewList');
   if (!reviewContainer) return;
 
-  const reviewItems = (result.answersDetail && result.answersDetail.length > 0)
-    ? result.answersDetail
-    : (state.activeQuestions && state.activeQuestions.length > 0)
-      ? state.activeQuestions.map((q, idx) => {
-          const userAns = result.answers ? result.answers[q.id] : null;
-          const isCorrect = userAns === q.correct;
-          return {
-            index: idx + 1,
-            questionId: q.id,
-            vocab: q.vocab,
-            dialogue: q.dialogue,
-            options: q.options,
-            userKey: userAns,
-            userText: userAns && q.options ? q.options[userAns] : '',
-            correctKey: q.correct,
-            correctText: q.options ? q.options[q.correct] : '',
-            isCorrect: isCorrect,
-            explanation: q.explanation
-          };
-        })
-      : APP_DATA.questions.map((q, idx) => {
-          const userAns = result.answers ? result.answers[q.id] : null;
-          const isCorrect = userAns === q.correct;
-          return {
-            index: idx + 1,
-            questionId: q.id,
-            vocab: q.vocab,
-            dialogue: q.dialogue,
-            options: q.options,
-            userKey: userAns,
-            userText: userAns && q.options ? q.options[userAns] : '',
-            correctKey: q.correct,
-            correctText: q.options ? q.options[q.correct] : '',
-            isCorrect: isCorrect,
-            explanation: q.explanation
-          };
-        });
+  const hasDetail = result.answersDetail && Array.isArray(result.answersDetail) && result.answersDetail.length > 0;
 
-  reviewContainer.innerHTML = reviewItems.map((item, idx) => {
-    const isCorrect = item.isCorrect;
-    const qNum = item.index || (idx + 1);
+  if (hasDetail) {
+    reviewContainer.innerHTML = result.answersDetail.map((item, idx) => {
+      const isCorrect = item.isCorrect;
+      const qNum = item.index || (idx + 1);
 
-    return `
-      <div class="review-item ${isCorrect ? 'correct' : 'incorrect'}">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
-          <h4 style="font-size:1rem; font-family:var(--font-heading);">
-            Câu ${qNum}: ${isCorrect ? '✅ Đúng (+0.25đ)' : '❌ Sai (0đ)'} 
-            <span class="badge ${isCorrect ? 'badge-success' : 'badge-danger'}" style="margin-left:0.5rem;">Từ vựng: ${item.vocab}</span>
-          </h4>
+      return `
+        <div class="review-item ${isCorrect ? 'correct' : 'incorrect'}">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
+            <h4 style="font-size:1rem; font-family:var(--font-heading);">
+              Câu ${qNum}: ${isCorrect ? '✅ Đúng (+0.25đ)' : '❌ Sai (0đ)'} 
+              <span class="badge ${isCorrect ? 'badge-success' : 'badge-danger'}" style="margin-left:0.5rem;">Từ vựng: ${item.vocab}</span>
+            </h4>
+            <span style="font-size:0.85rem; color:var(--text-muted);">
+              Lựa chọn của bạn: <strong style="color:${isCorrect ? 'var(--success)' : 'var(--danger)'};">${item.userKey ? `${item.userKey}. ${item.userText}` : '(Chưa chọn)'}</strong> 
+              ${!isCorrect ? `| Đáp án đúng: <strong style="color:var(--success);">${item.correctKey}. ${item.correctText}</strong>` : ''}
+            </span>
+          </div>
+
+          <div style="background:var(--bg-primary); padding:0.75rem 1rem; border-radius:var(--radius-sm); margin-bottom:0.75rem;">
+            ${item.dialogue ? item.dialogue.map(d => `<div style="font-size:0.95rem;"><strong>${d.speaker}:</strong> "${d.text}"</div>`).join('') : ''}
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.5rem; font-size:0.9rem;">
+            ${item.options ? Object.entries(item.options).map(([k, val]) => {
+              const isOptCorrect = k === item.correctKey;
+              const isOptSelected = k === item.userKey;
+              let badgeText = '';
+              let bg = 'transparent';
+              let border = 'var(--border-color)';
+
+              if (isOptCorrect && isOptSelected) {
+                badgeText = '✓ (Bạn chọn đúng)';
+                bg = 'rgba(16,185,129,0.18)';
+                border = 'var(--success)';
+              } else if (isOptCorrect) {
+                badgeText = '✓ (Đáp án chuẩn)';
+                bg = 'rgba(16,185,129,0.18)';
+                border = 'var(--success)';
+              } else if (isOptSelected) {
+                badgeText = '✗ (Bạn đã chọn)';
+                bg = 'rgba(244,63,94,0.18)';
+                border = 'var(--danger)';
+              }
+
+              return `
+                <div style="padding:0.45rem 0.65rem; border-radius:var(--radius-sm); background:${bg}; border:1px solid ${border}; line-height:1.4;">
+                  <strong>${k}.</strong> ${val} ${badgeText ? `<span style="font-size:0.8rem; font-weight:700; margin-left:4px;">${badgeText}</span>` : ''}
+                </div>
+              `;
+            }).join('') : ''}
+          </div>
+
+          <div class="explanation-box" style="margin-top:0.75rem;">
+            💡 <strong>Giải thích & Dịch nghĩa:</strong> ${item.explanation}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    // Clean educational review for legacy submissions (avoids false-mismatch red tags)
+    reviewContainer.innerHTML = `
+      <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius-md); padding:1rem 1.25rem; margin-bottom:1.5rem;">
+        <div style="display:flex; align-items:center; gap:0.5rem; color:var(--warning); font-weight:700; margin-bottom:0.35rem;">
+          <span>📌</span> <span>Thông tin kết quả bài thi:</span>
+        </div>
+        <p style="margin:0; font-size:0.92rem; color:var(--text-main); line-height:1.55;">
+          Kết quả thi của em: <strong>${result.score}/10 điểm (${result.correctCount}/${result.totalQuestions} câu đúng)</strong>.<br>
           <span style="font-size:0.85rem; color:var(--text-muted);">
-            Lựa chọn của bạn: <strong style="color:${isCorrect ? 'var(--success)' : 'var(--danger)'};">${item.userKey ? `${item.userKey}. ${item.userText}` : '(Chưa chọn)'}</strong> 
-            ${!isCorrect ? `| Đáp án đúng: <strong style="color:var(--success);">${item.correctKey}. ${item.correctText}</strong>` : ''}
+            <em>(Bài làm này được nộp ở phiên bản trước khi hệ thống lưu vết chi tiết từng phương án đảo đề. Dưới đây là ngân hàng 40 câu hỏi chuẩn Unit 3 kèm đáp án và giải thích để em ôn tập lại kiến thức):</em>
           </span>
-        </div>
-
-        <div style="background:var(--bg-primary); padding:0.75rem 1rem; border-radius:var(--radius-sm); margin-bottom:0.75rem;">
-          ${item.dialogue ? item.dialogue.map(d => `<div style="font-size:0.95rem;"><strong>${d.speaker}:</strong> "${d.text}"</div>`).join('') : ''}
-        </div>
-
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.5rem; font-size:0.9rem;">
-          ${item.options ? Object.entries(item.options).map(([k, val]) => {
-            const isOptCorrect = k === item.correctKey;
-            const isOptSelected = k === item.userKey;
-            let badgeText = '';
-            let bg = 'transparent';
-            let border = 'var(--border-color)';
-
-            if (isOptCorrect && isOptSelected) {
-              badgeText = '✓ (Bạn chọn đúng)';
-              bg = 'rgba(16,185,129,0.18)';
-              border = 'var(--success)';
-            } else if (isOptCorrect) {
-              badgeText = '✓ (Đáp án chuẩn)';
-              bg = 'rgba(16,185,129,0.18)';
-              border = 'var(--success)';
-            } else if (isOptSelected) {
-              badgeText = '✗ (Bạn đã chọn)';
-              bg = 'rgba(244,63,94,0.18)';
-              border = 'var(--danger)';
-            }
-
-            return `
-              <div style="padding:0.45rem 0.65rem; border-radius:var(--radius-sm); background:${bg}; border:1px solid ${border}; line-height:1.4;">
-                <strong>${k}.</strong> ${val} ${badgeText ? `<span style="font-size:0.8rem; font-weight:700; margin-left:4px;">${badgeText}</span>` : ''}
-              </div>
-            `;
-          }).join('') : ''}
-        </div>
-
-        <div class="explanation-box" style="margin-top:0.75rem;">
-          💡 <strong>Giải thích & Dịch nghĩa:</strong> ${item.explanation}
-        </div>
+        </p>
       </div>
+      ${APP_DATA.questions.map((q, idx) => `
+        <div class="review-item" style="border-left:4px solid var(--primary);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
+            <h4 style="font-size:1rem; font-family:var(--font-heading);">
+              Câu ${idx + 1}: <span class="badge badge-primary">Từ vựng: ${q.vocab}</span>
+            </h4>
+            <span style="font-size:0.85rem; color:var(--success); font-weight:700;">
+              Đáp án chuẩn: ${q.correct}. ${q.options[q.correct]}
+            </span>
+          </div>
+
+          <div style="background:var(--bg-primary); padding:0.75rem 1rem; border-radius:var(--radius-sm); margin-bottom:0.75rem;">
+            ${q.dialogue ? q.dialogue.map(d => `<div style="font-size:0.95rem;"><strong>${d.speaker}:</strong> "${d.text}"</div>`).join('') : ''}
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.5rem; font-size:0.9rem;">
+            ${Object.entries(q.options).map(([k, val]) => `
+              <div style="padding:0.45rem 0.65rem; border-radius:var(--radius-sm); background:${k === q.correct ? 'rgba(16,185,129,0.18)' : 'transparent'}; border:1px solid ${k === q.correct ? 'var(--success)' : 'var(--border-color)'}; line-height:1.4;">
+                <strong>${k}.</strong> ${val} ${k === q.correct ? '<span style="font-size:0.8rem; font-weight:700; margin-left:4px; color:var(--success);">✓ (Đáp án chuẩn)</span>' : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="explanation-box" style="margin-top:0.75rem;">
+            💡 <strong>Giải thích & Dịch nghĩa:</strong> ${q.explanation}
+          </div>
+        </div>
+      `).join('')}
     `;
-  }).join('');
+  }
 }
 
 // ==========================================
@@ -1928,6 +1955,17 @@ function viewStudentDetail(classId, studentCode) {
   const sub = submissions[`${classId}_${studentCode}`];
   if (!sub) return;
 
+  // Guarantee strict mathematical harmony between answersDetail and summary counters
+  if (sub.answersDetail && Array.isArray(sub.answersDetail) && sub.answersDetail.length > 0) {
+    const detailCorrect = sub.answersDetail.filter(d => Boolean(d.isCorrect)).length;
+    sub.correctCount = detailCorrect;
+    sub.totalQuestions = sub.answersDetail.length;
+    sub.score = Math.round(((detailCorrect / sub.totalQuestions) * 10) * 100) / 100;
+  } else if (sub.correctCount !== undefined && sub.totalQuestions) {
+    sub.correctCount = Math.max(0, Math.min(sub.totalQuestions, Math.round(Number(sub.correctCount))));
+    sub.score = Math.round(((sub.correctCount / sub.totalQuestions) * 10) * 100) / 100;
+  }
+
   const modal = document.getElementById('studentDetailModal');
   const title = document.getElementById('modalStudentTitle');
   if (title) {
@@ -2026,24 +2064,25 @@ function viewStudentDetail(classId, studentCode) {
             `;
           }).join('')
         : `
-          <div style="padding:0.6rem 0.8rem; background:rgba(245,158,11,0.1); border-radius:var(--radius-sm); margin-bottom:0.75rem; font-size:0.85rem; color:var(--warning);">
-            ℹ️ <em>Bài làm này nộp ở phiên bản trước khi cập nhật chi tiết phương án đảo đề. Thống kê tổng: <strong>${sub.correctCount}/${sub.totalQuestions} câu đúng (${sub.score}/10 điểm)</strong>.</em>
+          <div style="padding:0.75rem 1rem; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.25); border-radius:var(--radius-sm); margin-bottom:1rem; font-size:0.88rem; color:var(--text-main); line-height:1.5;">
+            📌 <strong>Kết quả bài thi đã ghi nhận chính xác:</strong> Thí sinh đạt <strong>${sub.correctCount}/${sub.totalQuestions} câu đúng (${sub.score}/10 điểm)</strong>.<br>
+            <span style="color:var(--text-muted); font-size:0.82rem;"><em>(Lưu ý: Bài làm này được nộp ở phiên bản trước khi hệ thống lưu vết chi tiết từng phương án đảo đề. Thống kê điểm số và số câu đúng được bảo toàn chính xác. Dưới đây là danh sách ngân hàng câu hỏi tham chiếu kèm đáp án chuẩn Unit 3):</em></span>
           </div>
-          ${APP_DATA.questions.map((q, idx) => {
-            const ans = sub.answers ? sub.answers[q.id] : null;
-            const isCorrect = ans === q.correct;
-            return `
-              <div style="padding:0.85rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+          ${APP_DATA.questions.map((q, idx) => `
+            <div style="padding:0.85rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; flex-wrap:wrap;">
+              <div style="flex:1; min-width:240px;">
                 <div>
-                  <strong>Câu ${idx + 1}</strong> (${q.vocab}): 
-                  <span style="color:${isCorrect ? 'var(--success)' : 'var(--danger)'}; font-weight:600; margin-left:0.5rem;">
-                    ${ans ? `Chọn ${ans}` : '(Chưa chọn)'} ${isCorrect ? '✓' : '✗'}
-                  </span>
+                  <strong>Câu ${idx + 1}</strong> <span class="badge badge-primary" style="margin-left:0.35rem;">Từ vựng: ${q.vocab}</span>
                 </div>
-                <div>Đáp án chuẩn: <strong style="color:var(--success);">${q.correct}</strong></div>
+                <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.25rem;">
+                  ${q.dialogue ? q.dialogue.map(d => `<div><strong>${d.speaker}:</strong> "${d.text}"</div>`).join('') : ''}
+                </div>
               </div>
-            `;
-          }).join('')}
+              <div style="text-align:right;">
+                <span class="badge badge-success" style="font-size:0.82rem;">Đáp án chuẩn: ${q.correct}. ${q.options[q.correct]}</span>
+              </div>
+            </div>
+          `).join('')}
         `
       }
     </div>
@@ -2080,7 +2119,7 @@ function renderItemAnalysis(completedSubmissions) {
             wrongCount++;
           }
         }
-      } else if (sub.answers && sub.answers[q.id]) {
+      } else if (sub.answers && sub.answers[q.id] && sub.isShuffled === false) {
         answeredCount++;
         if (sub.answers[q.id] !== q.correct) {
           wrongCount++;
